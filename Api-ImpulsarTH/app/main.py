@@ -40,6 +40,9 @@ app.add_middleware(
 Base.metadata.create_all(bind=engine)
 
 # Incluye routers
+print("DATABASE_URL:", os.getenv("DATABASE_URL"))
+print("SUPABASE_URL:", os.getenv("SUPABASE_URL"))
+
 app.include_router(empresas.router)
 app.include_router(trabajadores.router)
 app.include_router(documentos.router)
