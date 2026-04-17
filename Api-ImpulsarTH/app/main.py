@@ -37,7 +37,7 @@ app.add_middleware(
 )
 
 # Crea tablas (solo se ejecuta una vez al iniciar)
-Base.metadata.create_all(bind=engine)
+#Base.metadata.create_all(bind=engine)
 
 # Incluye routers
 print("DATABASE_URL:", os.getenv("DATABASE_URL"))
