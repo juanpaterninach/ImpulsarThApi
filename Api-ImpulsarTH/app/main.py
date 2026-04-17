@@ -13,7 +13,7 @@ from app.routers import empresas, trabajadores, documentos
 from app.database import engine, Base
 
 # Modelos (solo los importas para que se registren si usas Base)
-from app.models import empresa, trabajador, documento, tipo_documento  # ← ok, aunque no se usen directamente aquí
+from app.models import empresa, trabajador, documento, tipo_documento, usuario # ← ok, aunque no se usen directamente aquí
 
 import os
 import uvicorn
@@ -37,7 +37,7 @@ app.add_middleware(
 )
 
 # Crea tablas (solo se ejecuta una vez al iniciar)
-#Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 # Incluye routers
 print("DATABASE_URL:", os.getenv("DATABASE_URL"))
