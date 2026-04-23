@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from ..dependencies import get_db
 from ..models.trabajador import Trabajador
-from ..schemas.trabajador import TrabajadorCreate, TrabajadorResponse
+from ..schemas.trabajador import TrabajadorCreate, TrabajadorResponse, TrabajadorUpdate
 from ..models.documento import Documento
 from app.services.trabajador_service import documentos_faltantes
 from fastapi import HTTPException
@@ -91,4 +91,64 @@ def cambiar_estado_trabajador(trabajador_id: int, estado: str, db: Session = Dep
         "msg": "Estado actualizado",
         "trabajador_id": trabajador.id,
         "nuevo_estado": trabajador.estado
+    }
+
+@router.patch("/{trabajador_id}/actualizar")
+def actualizar_trabajador(
+    trabajador_id: int,
+    datos: TrabajadorUpdate,
+    db: Session = Depends(get_db)
+):
+
+    trabajador = db.query(Trabajador).filter(
+        Trabajador.id == trabajador_id
+    ).first()
+
+    if not trabajador:
+        raise HTTPException(status_code=404, detail="Trabajador no encontrado")
+
+    # ✅ nombre
+    if datos.nombre is not None:
+        trabajador.nombre = datos.nombre
+
+    # ✅ cedula (validar única)
+    if datos.cedula is not None:
+        existente = db.query(Trabajador).filter(
+            Trabajador.cedula == datos.cedula,
+            Trabajador.id != trabajador_id
+        ).first()
+
+        if existente:
+            raise HTTPException(status_code=400, detail="La cédula ya está registrada")
+
+        trabajador.cedula = datos.cedula
+
+    # ✅ estado
+    if datos.estado is not None:
+        if datos.estado not in ["activo", "inactivo"]:
+            raise HTTPException(status_code=400, detail="Estado inválido")
+
+        trabajador.estado = datos.estado
+
+    # ✅ empresa (🔥 LO NUEVO)
+    if datos.empresa_id is not None:
+        empresa = db.query(Empresa).filter(
+            Empresa.id == datos.empresa_id
+        ).first()
+
+        if not empresa:
+            raise HTTPException(status_code=400, detail="La empresa no existe")
+
+        trabajador.empresa_id = datos.empresa_id
+
+    # ⚠️ opcional (no recomendado tocar)
+    if datos.fecha_creacion is not None:
+        trabajador.fecha_creacion = datos.fecha_creacion
+
+    db.commit()
+    db.refresh(trabajador)
+
+    return {
+        "mensaje": "Trabajador actualizado",
+        "trabajador": trabajador
     }
